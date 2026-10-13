@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Venue Seating Allocator - Warm Beige Luxury Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        beige: {
+                            50: '#fcfaf7',
+                            100: '#f7f2ea',
+                            200: '#efe5d5',
+                            300: '#e2d2b9',
+                            400: '#cca378',
+                            500: '#b88958',
+                            600: '#9b6c3e',
+                            700: '#7a512d',
+                            800: '#523720',
+                            900: '#2c1e13',
+                        },
+                        champagne: {
+                            gold: '#d4af37',
+                            light: '#fbf7ee',
+                            dark: '#8c6d46',
+                            bronze: '#a37c4d'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'Georgia', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #fbf8f3 0%, #f4eee0 50%, #eaddcb 100%);
+            color: #2c221e;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        .serif-title {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 253, 249, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 184, 134, 0.35);
+            box-shadow: 0 10px 30px -5px rgba(82, 55, 32, 0.05), 0 4px 12px -2px rgba(82, 55, 32, 0.03);
+        }
+
+        .glass-card-accent {
+            background: rgba(247, 242, 234, 0.9);
+            border: 1px solid rgba(184, 137, 88, 0.4);
+            box-shadow: 0 8px 25px rgba(139, 109, 70, 0.08);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f7f2ea;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cca378;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #b88958;
+        }
+
+        /* Input highlight states */
+        .input-error {
+            border-color: #dc2626 !important;
+            background-color: #fef2f2 !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+        }
+
+        .badge-relationship {
+            transition: all 0.2s ease;
+        }
+
+        /* Print styles for place cards */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="p-3 md:p-6 text-beige-900 custom-scrollbar">
+
+    <div id="app-root" class="max-w-7xl mx-auto space-y-6">
+        <!-- Header -->
+        <header class="glass-card rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-48 h-48 bg-champagne-gold/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="space-y-1 text-center md:text-left">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-champagne-gold/15 text-beige-800 text-xs font-semibold uppercase tracking-wider mb-1 border border-champagne-gold/30">
+                    <i class="fa-solid fa-crown text-champagne-dark text-xs"></i> Luxury Event Suite
+                </div>
+                <h1 class="serif-title text-3xl md:text-4xl font-bold text-beige-900 tracking-tight">Event Venue Seating Allocator</h1>
+                <p class="text-beige-700 text-sm md:text-base font-light">Smart seating optimization for luxury galas, weddings & high-profile corporate receptions.</p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div class="text-right hidden sm:block">
+                    <span class="block text-xs uppercase tracking-widest text-beige-600 font-medium">Harmony Score</span>
+                    <span id="score-val-header" class="serif-title text-2xl font-bold text-champagne-dark">0%</span>
+                </div>
+                <button id="solve-btn-top" onclick="triggerSolve()" class="px-5 py-3 bg-gradient-to-r from-beige-700 via-beige-800 to-beige-900 hover:from-beige-800 hover:to-beige-900 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all flex items-center gap-2 transform active:scale-95">
+                    <i class="fa-solid fa-wand-magic-sparkles text-champagne-gold"></i>
+                    <span>Optimize Seating</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Layout Grid -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <section class="lg:col-span-5 space-y-6">
+                
+                <!-- 1. Venue & Room Dimensions -->
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-beige-200/80 pb-3">
+                        <h2 class="serif-title text-lg font-bold text-beige-900 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-beige-200 text-beige-800 text-xs flex items-center justify-center font-bold">1</span>
+                            Venue & Room Configuration
+                        </h2>
+                        <i class="fa-solid fa-vector-square text-beige-500"></i>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label for="venue-width" class="block text-xs font-semibold text-beige-700 uppercase tracking-wider mb-1">Width (m)</label>
+                            <input type="number" id="venue-width" value="20" min="5" max="100" class="w-full bg-white/80 border border-beige-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-champagne-dark focus:outline-none transition-all">
+                        </div>
+                        <div>
+                            <label for="venue-height" class="block text-xs font-semibold text-beige-700 uppercase tracking-wider mb-1">Length (m)</label>
+                            <input type="number" id="venue-height" value="15" min="5" max="100" class="w-full bg-white/80 border border-beige-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-champagne-dark focus:outline-none transition-all">
+                        </div>
+                        <div>
+                            <label for="max-tables" class="block text-xs font-semibold text-beige-700 uppercase tracking-wider mb-1">Total Tables</label>
+                            <input type="number" id="max-tables" value="6" min="1" max="20" class="w-full bg-white/80 border border-beige-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-champagne-dark focus:outline-none transition-all">
+                        </div>
+                        <div class="col-span-2 sm:col-span-3">
+                            <label for="max-table-size" class="block text-xs font-semibold text-beige-700 uppercase tracking-wider mb-1">Max Seats Per Table</label>
+                            <input type="number" id="max-table-size" value="6" min="2" max="12" class="w-full bg-white/80 border border-beige-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-champagne-dark focus:outline-none transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Guest Management & Validation -->
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-beige-200/80 pb-3">
+                        <h2 class="serif-title text-lg font-bold text-beige-900 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-beige-200 text-beige-800 text-xs flex items-center justify-center font-bold">2</span>
+                            Guest Directory & Validation
+                        </h2>
+                        <span id="guest-count-badge" class="px-2 py-0.5 rounded-full bg-beige-200 text-beige-800 text-xs font-bold">0 Guests</span>
+                    </div>
+
+                    <!-- Input Fields with Detailed Error Handling -->
+                    <form id="add-guest-form" onsubmit="handleAddGuest(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-beige-700 uppercase tracking-wider mb-1">Guest Full Name <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" id="guest-name-input" placeholder="e.g. Lady Eleanor Vance" class="w-full bg-white/90 border border-beige-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-champagne-dark focus:outline-none transition-all">
+                                <i class="fa-solid fa-user absolute left-3 top-2.5 text-beige-400 text-xs"></i>
+                            </div>
+                            <p id="name-error" class="text-red-600 text-xs mt-1 hidden font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-circle-exclamation"></i> Full name cannot be empty (min 2 characters).
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-beige-700 uppercase tracking-wider mb-1">Guest Email Address <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" id="guest-email-input" placeholder="e.g. eleanor@vance-manor.com" class="w-full bg-white/90 border border-beige-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-champagne-dark focus:outline-none transition-all">
+                                <i class="fa-solid fa-envelope absolute left-3 top-2.5 text-beige-400 text-xs"></i>
+                            </div>
+                            <p id="email-error" class="text-red-600 text-xs mt-1 hidden font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-circle-exclamation"></i> Please enter a valid RFC-5322 email address.
+                            </p>
+                        </div>
+
+                        <button type="submit" id="add-guest-btn" class="w-full py-2.5 bg-beige-800 hover:bg-beige-900 text-amber-50 rounded-lg font-medium text-sm transition-all shadow flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-user-plus text-champagne-gold"></i> Add Guest to Roster
+                        </button>
+                    </form>
+
+                    <!-- Guest Roster List Container -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center text-xs text-beige-600 font-semibold uppercase tracking-wider">
+                            <span>Current Guest List</span>
+                            <button onclick="clearAllGuests()" class="text-red-700 hover:text-red-900 text-xs font-normal underline">Clear All</button>
+                        </div>
+                        <div id="guest-list-container" class="max-h-48 overflow-y-auto custom-scrollbar space-y-1.5 pr-1 border border-beige-200/60 rounded-xl p-2 bg-white/40">
+                            <!-- Injected Dynamically -->
+                            <div class="text-center py-6 text-beige-500 text-xs italic">
+                                No guests added yet. Add guests above to start planning.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Dynamic Relationship Matrix Rules -->
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-beige-200/80 pb-3">
+                        <h2 class="serif-title text-lg font-bold text-beige-900 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-beige-200 text-beige-800 text-xs flex items-center justify-center font-bold">3</span>
+                            Seating Preference Rules
+                        </h2>
+                        <i class="fa-solid fa-heart-circle-bolt text-champagne-dark"></i>
+                    </div>
+
+                    <p class="text-xs text-beige-700 leading-relaxed">
+                        Define social dynamics between guests. The seating algorithm will maximize positive pairing harmony while isolating conflicting guests.
+                    </p>
+
+                    <div id="relationship-rules-container" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+                        <!-- Dynamic rule pairs generated here -->
+                        <div class="text-center py-4 text-beige-500 text-xs italic">
+                            Add at least 2 guests to set seating relationship preferences.
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <section class="lg:col-span-7 space-y-6">
+                
+                <!-- 4. Interactive Canvas Floor Plan -->
+                <div class="glass-card rounded-2xl p-5 space-y-3 relative overflow-hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-beige-200/80 pb-3">
+                        <div>
+                            <h2 class="serif-title text-xl font-bold text-beige-900 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-beige-200 text-beige-800 text-xs flex items-center justify-center font-bold">4</span>
+                                Interactive Floor Plan
+                            </h2>
+                            <p class="text-xs text-beige-600">Drag to visualize, hover over tables & guests for seating roster breakdown.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-beige-200/60 text-beige-800 text-xs font-semibold">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                                Live View
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Box -->
+                    <div class="relative w-full rounded-xl overflow-hidden border border-beige-300 bg-amber-50/40 shadow-inner">
+                        <canvas id="venue-canvas" class="w-full h-[420px] block cursor-pointer"></canvas>
+                        <div id="canvas-overlay-tip" class="absolute bottom-3 left-3 bg-white/90 backdrop-blur border border-beige-300 rounded-lg px-3 py-1.5 text-xs text-beige-800 shadow-sm pointer-events-none flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info text-champagne-dark"></i>
+                            <span>Gold dots: Assigned Seats | Click guest on inspector below to swap tables</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Live Seating Inspector & Swaps -->
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-beige-200/80 pb-3">
+                        <h2 class="serif-title text-lg font-bold text-beige-900 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-beige-200 text-beige-800 text-xs flex items-center justify-center font-bold">5</span>
+                            Live Seating Inspector & Table Rosters
+                        </h2>
+                        <i class="fa-solid fa-arrows-rotate text-beige-600"></i>
+                    </div>
+
+                    <div id="seating-inspector-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-72 overflow-y-auto custom-scrollbar pr-1">
+                        <div class="col-span-2 text-center py-8 text-beige-500 text-xs italic">
+                            Click "Optimize Seating" above to auto-assign guests into luxury tables.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Actions, Export & Email Dispatch -->
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <div class="flex items-center justify-between border-b border-beige-200/80 pb-3">
+                        <h2 class="serif-title text-lg font-bold text-beige-900 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-beige-200 text-beige-800 text-xs flex items-center justify-center font-bold">6</span>
+                            Exports & Guest Notifications
+                        </h2>
+                        <i class="fa-solid fa-paper-plane text-champagne-dark"></i>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button onclick="exportCSV()" class="p-3 bg-white hover:bg-beige-100 border border-beige-300 text-beige-800 rounded-xl text-xs font-semibold transition-all shadow-sm flex flex-col items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-file-csv text-base text-emerald-700"></i>
+                            <span>Export Roster (CSV)</span>
+                        </button>
+                        
+                        <button onclick="printPlaceCards()" class="p-3 bg-white hover:bg-beige-100 border border-beige-300 text-beige-800 rounded-xl text-xs font-semibold transition-all shadow-sm flex flex-col items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-print text-base text-beige-700"></i>
+                            <span>Print Place Cards</span>
+                        </button>
+
+                        <button onclick="sendEmailNotifications()" id="email-guests-btn" class="p-3 bg-gradient-to-r from-champagne-dark to-beige-800 hover:from-beige-800 hover:to-beige-900 text-white rounded-xl text-xs font-semibold transition-all shadow-md flex flex-col items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-paper-plane text-base text-champagne-gold"></i>
+                            <span>Email Seat Tickets</span>
+                        </button>
+                    </div>
+
+                    <!-- Notification Feedback Container -->
+                    <div id="status-message" class="hidden p-3 rounded-lg text-xs font-medium border"></div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- Hidden Printable Place Cards Area -->
+    <div id="print-area" class="hidden p-8 bg-white text-gray-900">
+        <h1 class="text-2xl font-serif font-bold text-center mb-6">Event Place Cards</h1>
+        <div id="place-cards-grid" class="grid grid-cols-2 gap-6"></div>
+    </div>
+
+    <!-- Custom Notification Popup Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-4 py-3 rounded-xl shadow-xl border bg-white text-xs font-medium flex items-center gap-2">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-600"></i>
+        <span id="toast-text">Message</span>
+    </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function(){
+            emailjs.init({
+                publicKey: "NhCJ1r_68c8mDTixu",
+            });
+        })();
+    </script>
+
+    <script>
+        
+        // Application State
+        const state = {
+            guests: [
+                { id: '1', name: 'Alexander Wright', email: 'alexander@wright-estates.com', table: null },
+                { id: '2', name: 'Sophia Montgomery', email: 'sophia@montgomery.org', table: null },
+                { id: '3', name: 'Julian Sterling', email: 'julian@sterling-finance.com', table: null },
+                { id: '4', name: 'Clara Oswald', email: 'clara@oswald-design.co', table: null },
+                { id: '5', name: 'Marcus Vance', email: 'marcus@vance-holdings.com', table: null },
+                { id: '6', name: 'Evelyn Reed', email: 'evelyn@reed-gallery.org', table: null }
+            ],
+            // relationships: { "id1-id2": "together" | "away" | "neutral" }
+            relationships: {
+                '1-2': 'together',
+                '3-4': 'together',
+                '1-5': 'away'
+            },
+            venue: {
+                width: 20,
+                length: 15,
+                maxTables: 6,
+                maxPerTable: 6
+            },
+            harmonyScore: 0,
+            tables: [] // Generated seated arrangement
+        };
+
+        // Regex for strict email validation RFC 5322 standard approximation
+        const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+
+        const nameInput = document.getElementById('guest-name-input');
+        const emailInput = document.getElementById('guest-email-input');
+        const nameError = document.getElementById('name-error');
+        const emailError = document.getElementById('email-error');
+        const guestListContainer = document.getElementById('guest-list-container');
+        const relationshipRulesContainer = document.getElementById('relationship-rules-container');
+        const seatingInspectorContainer = document.getElementById('seating-inspector-container');
+        const venueWidthInput = document.getElementById('venue-width');
+        const venueHeightInput = document.getElementById('venue-height');
+        const maxTablesInput = document.getElementById('max-tables');
+        const maxTableSizeInput = document.getElementById('max-table-size');
+        const scoreValHeader = document.getElementById('score-val-header');
+        const guestCountBadge = document.getElementById('guest-count-badge');
+        const canvas = document.getElementById('venue-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function setupCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio || rect.width;
+            canvas.height = rect.height * window.devicePixelRatio || rect.height;
+            ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+            renderCanvas();
+        }
+
+        window.addEventListener('resize', setupCanvas);
+
+        function validateGuestInputs() {
+            let isValid = true;
+            const nameVal = nameInput.value.trim();
+            const emailVal = emailInput.value.trim();
+
+            // Validate Name
+            if (!nameVal || nameVal.length < 2) {
+                nameInput.classList.add('input-error');
+                nameError.classList.remove('hidden');
+                isValid = false;
+            } else {
+                nameInput.classList.remove('input-error');
+                nameError.classList.add('hidden');
+            }
+
+            // Validate Email
+            if (!emailVal || !EMAIL_REGEX.test(emailVal)) {
+                emailInput.classList.add('input-error');
+                emailError.classList.remove('hidden');
+                isValid = false;
+            } else {
+                emailInput.classList.remove('input-error');
+                emailError.classList.add('hidden');
+            }
+
+            return isValid;
+        }
+
+        // Live input cleaning listeners
+        nameInput.addEventListener('input', () => {
+            if (nameInput.value.trim().length >= 2) {
+                nameInput.classList.remove('input-error');
+                nameError.classList.add('hidden');
+            }
+        });
+
+        emailInput.addEventListener('input', () => {
+            if (EMAIL_REGEX.test(emailInput.value.trim())) {
+                emailInput.classList.remove('input-error');
+                emailError.classList.add('hidden');
+            }
+        });
+
+        function handleAddGuest(e) {
+            e.preventDefault();
+            if (!validateGuestInputs()) return;
+
+            const nameVal = nameInput.value.trim();
+            const emailVal = emailInput.value.trim();
+
+            // Check duplicate email
+            if (state.guests.some(g => g.email.toLowerCase() === emailVal.toLowerCase())) {
+                emailInput.classList.add('input-error');
+                emailError.textContent = 'This email is already registered in the guest list.';
+                emailError.classList.remove('hidden');
+                return;
+            }
+
+            const newGuest = {
+                id: Date.now().toString(),
+                name: nameVal,
+                email: emailVal,
+                table: null
+            };
+
+            state.guests.push(newGuest);
+            nameInput.value = '';
+            emailInput.value = '';
+
+            showToast(`Added ${newGuest.name} to roster.`);
+            updateUI();
+        }
+
+        function removeGuest(id) {
+            state.guests = state.guests.filter(g => g.id !== id);
+            // Clean relationships involving this guest
+            Object.keys(state.relationships).forEach(key => {
+                if (key.includes(id)) {
+                    delete state.relationships[key];
+                }
+            });
+            showToast('Guest removed from event.');
+            updateUI();
+        }
+
+        function clearAllGuests() {
+            if (confirm('Are you sure you want to clear all guests?')) {
+                state.guests = [];
+                state.relationships = {};
+                state.tables = [];
+                showToast('All guests cleared.');
+                updateUI();
+            }
+        }
+
+        function setRelationship(g1Id, g2Id, type) {
+            const key = Number(g1Id) < Number(g2Id) ? `${g1Id}-${g2Id}` : `${g2Id}-${g1Id}`;
+            if (type === 'neutral') {
+                delete state.relationships[key];
+            } else {
+                state.relationships[key] = type;
+            }
+            renderRelationships();
+            renderCanvas();
+        }
+
+        function getRelationship(g1Id, g2Id) {
+            const key = Number(g1Id) < Number(g2Id) ? `${g1Id}-${g2Id}` : `${g2Id}-${g1Id}`;
+            return state.relationships[key] || 'neutral';
+        }
+
+        function triggerSolve() {
+            if (state.guests.length === 0) {
+                showToast('Add guests before optimizing seating.', true);
+                return;
+            }
+
+            // Sync venue parameters
+            state.venue.width = parseFloat(venueWidthInput.value) || 20;
+            state.venue.length = parseFloat(venueHeightInput.value) || 15;
+            state.venue.maxTables = parseInt(maxTablesInput.value) || 6;
+            state.venue.maxPerTable = parseInt(maxTableSizeInput.value) || 6;
+
+            const totalCapacity = state.venue.maxTables * state.venue.maxPerTable;
+            if (state.guests.length > totalCapacity) {
+                showToast(`Warning: Guest count (${state.guests.length}) exceeds max venue capacity (${totalCapacity}). Increase tables or capacity.`, true);
+            }
+
+            // Simulated Annealing / Greedy Optimization
+            const numTables = Math.min(state.venue.maxTables, Math.ceil(state.guests.length / state.venue.maxPerTable) || 1);
+            
+            // Generate empty tables
+            let bestTables = Array.from({ length: numTables }, (_, i) => ({
+                id: i + 1,
+                name: `Table ${i + 1}`,
+                guests: []
+            }));
+
+            // Initial random assignment
+            let unassigned = [...state.guests];
+            let tableIndex = 0;
+            unassigned.forEach(guest => {
+                if (bestTables[tableIndex].guests.length >= state.venue.maxPerTable) {
+                    tableIndex = (tableIndex + 1) % numTables;
+                }
+                bestTables[tableIndex].guests.push({ ...guest, table: bestTables[tableIndex].id });
+            });
+
+            // Calculate score for arrangement
+            function calculateHarmony(tableArrangement) {
+                let points = 0;
+                let totalRules = 0;
+
+                Object.keys(state.relationships).forEach(key => {
+                    const [g1, g2] = key.split('-');
+                    const type = state.relationships[key];
+                    totalRules++;
+
+                    // Find table for g1 and g2
+                    let t1 = null, t2 = null;
+                    tableArrangement.forEach(tb => {
+                        if (tb.guests.some(g => g.id === g1)) t1 = tb.id;
+                        if (tb.guests.some(g => g.id === g2)) t2 = tb.id;
+                    });
+
+                    if (t1 !== null && t2 !== null) {
+                        if (type === 'together') {
+                            if (t1 === t2) points += 10;
+                            else points -= 10;
+                        } else if (type === 'away') {
+                            if (t1 !== t2) points += 10;
+                            else points -= 15;
+                        }
+                    }
+                });
+
+                if (totalRules === 0) return 100; // Perfect neutral score if no rules
+                const maxPossible = totalRules * 10;
+                const percentage = Math.max(0, Math.min(100, Math.round((points / maxPossible) * 100)));
+                return percentage;
+            }
+
+            // Simulated Annealing Iterations
+            let currentScore = calculateHarmony(bestTables);
+            let temp = 100;
+            const coolingRate = 0.95;
+
+            for (let iter = 0; iter < 150; iter++) {
+                // Pick two random tables and swap one guest
+                const t1Idx = Math.floor(Math.random() * bestTables.length);
+                const t2Idx = Math.floor(Math.random() * bestTables.length);
+
+                if (t1Idx !== t2Idx && bestTables[t1Idx].guests.length > 0) {
+                    const g1Idx = Math.floor(Math.random() * bestTables[t1Idx].guests.length);
+                    const candidateTables = JSON.parse(JSON.stringify(bestTables));
+
+                    const movedGuest = candidateTables[t1Idx].guests.splice(g1Idx, 1)[0];
+                    if (candidateTables[t2Idx].guests.length < state.venue.maxPerTable) {
+                        candidateTables[t2Idx].guests.push(movedGuest);
+                        
+                        const newScore = calculateHarmony(candidateTables);
+                        if (newScore > currentScore || Math.exp((newScore - currentScore) / temp) > Math.random()) {
+                            bestTables = candidateTables;
+                            currentScore = newScore;
+                        }
+                    }
+                }
+                temp *= coolingRate;
+            }
+
+            state.tables = bestTables;
+            state.harmonyScore = currentScore;
+
+            showToast(`Optimization complete! Harmony Score: ${currentScore}%`);
+            updateUI();
+        }
+
+        function swapGuestTable(guestId, newTableId) {
+            newTableId = parseInt(newTableId);
+            
+            // Find current guest table
+            let currentTable = null;
+            let guestObj = null;
+
+            state.tables.forEach(tb => {
+                const idx = tb.guests.findIndex(g => g.id === guestId);
+                if (idx !== -1) {
+                    currentTable = tb;
+                    guestObj = tb.guests[idx];
+                }
+            });
+
+            if (!currentTable || !guestObj) return;
+
+            const targetTable = state.tables.find(t => t.id === newTableId);
+            if (!targetTable) return;
+
+            if (targetTable.guests.length >= state.venue.maxPerTable) {
+                showToast(`Table ${targetTable.id} is full (Max ${state.venue.maxPerTable}).`, true);
+                renderSeatingInspector();
+                return;
+            }
+
+            // Perform swap
+            currentTable.guests = currentTable.guests.filter(g => g.id !== guestId);
+            targetTable.guests.push({ ...guestObj, table: targetTable.id });
+
+            // Recalculate score
+            let points = 0;
+            let totalRules = 0;
+            Object.keys(state.relationships).forEach(key => {
+                const [g1, g2] = key.split('-');
+                const type = state.relationships[key];
+                totalRules++;
+                let t1 = null, t2 = null;
+                state.tables.forEach(tb => {
+                    if (tb.guests.some(g => g.id === g1)) t1 = tb.id;
+                    if (tb.guests.some(g => g.id === g2)) t2 = tb.id;
+                });
+                if (t1 !== null && t2 !== null) {
+                    if (type === 'together' && t1 === t2) points += 10;
+                    else if (type === 'away' && t1 !== t2) points += 10;
+                }
+            });
+            state.harmonyScore = totalRules > 0 ? Math.max(0, Math.min(100, Math.round((points / (totalRules * 10)) * 100))) : 100;
+
+            showToast(`Moved ${guestObj.name} to Table ${newTableId}.`);
+            updateUI();
+        }
+
+        function renderGuestList() {
+            guestCountBadge.textContent = `${state.guests.length} Guest${state.guests.length === 1 ? '' : 's'}`;
+
+            if (state.guests.length === 0) {
+                guestListContainer.innerHTML = `
+                    <div class="text-center py-6 text-beige-500 text-xs italic">
+                        No guests added yet. Add guests above to start planning.
+                    </div>`;
+                return;
+            }
+
+            guestListContainer.innerHTML = state.guests.map(g => `
+                <div class="flex items-center justify-between p-2.5 rounded-lg bg-white/80 border border-beige-200 text-xs hover:border-beige-400 transition-all">
+                    <div class="truncate max-w-[70%]">
+                        <div class="font-semibold text-beige-900 truncate">${escapeHtml(g.name)}</div>
+                        <div class="text-beige-600 text-[11px] truncate"><i class="fa-regular fa-envelope text-[10px] mr-1"></i>${escapeHtml(g.email)}</div>
+                    </div>
+                    <button onclick="removeGuest('${g.id}')" class="text-beige-400 hover:text-red-600 transition-colors p-1" title="Remove guest">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderRelationships() {
+            if (state.guests.length < 2) {
+                relationshipRulesContainer.innerHTML = `
+                    <div class="text-center py-4 text-beige-500 text-xs italic">
+                        Add at least 2 guests to set seating relationship preferences.
+                    </div>`;
+                return;
+            }
+
+            let pairsHtml = '';
+            for (let i = 0; i < state.guests.length; i++) {
+                for (let j = i + 1; j < state.guests.length; j++) {
+                    const g1 = state.guests[i];
+                    const g2 = state.guests[j];
+                    const rel = getRelationship(g1.id, g2.id);
+
+                    pairsHtml += `
+                        <div class="flex items-center justify-between p-2 rounded-lg bg-white/70 border border-beige-200/80 text-xs">
+                            <span class="truncate font-medium text-beige-800 max-w-[45%]" title="${escapeHtml(g1.name)} & ${escapeHtml(g2.name)}">
+                                ${escapeHtml(g1.name.split(' ')[0])} & ${escapeHtml(g2.name.split(' ')[0])}
+                            </span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="setRelationship('${g1.id}', '${g2.id}', 'together')" 
+                                    class="px-2 py-1 rounded text-[11px] font-medium transition-all ${rel === 'together' ? 'bg-emerald-700 text-white shadow-sm' : 'bg-beige-100 text-beige-700 hover:bg-beige-200'}">
+                                    <i class="fa-solid fa-heart mr-1"></i>Together
+                                </button>
+                                <button onclick="setRelationship('${g1.id}', '${g2.id}', 'neutral')" 
+                                    class="px-2 py-1 rounded text-[11px] font-medium transition-all ${rel === 'neutral' ? 'bg-beige-400 text-white shadow-sm' : 'bg-beige-100 text-beige-700 hover:bg-beige-200'}">
+                                    Neutral
+                                </button>
+                                <button onclick="setRelationship('${g1.id}', '${g2.id}', 'away')" 
+                                    class="px-2 py-1 rounded text-[11px] font-medium transition-all ${rel === 'away' ? 'bg-amber-800 text-white shadow-sm' : 'bg-beige-100 text-beige-700 hover:bg-beige-200'}">
+                                    <i class="fa-solid fa-hand-split-upward mr-1"></i>Away
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            relationshipRulesContainer.innerHTML = pairsHtml;
+        }
+
+        function renderSeatingInspector() {
+            if (state.tables.length === 0) {
+                seatingInspectorContainer.innerHTML = `
+                    <div class="col-span-2 text-center py-8 text-beige-500 text-xs italic">
+                        Click "Optimize Seating" above to auto-assign guests into luxury tables.
+                    </div>`;
+                return;
+            }
+
+            seatingInspectorContainer.innerHTML = state.tables.map(table => `
+                <div class="glass-card-accent rounded-xl p-3 border border-beige-300/80 space-y-2">
+                    <div class="flex items-center justify-between border-b border-beige-300/50 pb-2">
+                        <span class="serif-title font-bold text-sm text-beige-900">${table.name}</span>
+                        <span class="text-[11px] font-semibold text-beige-700 bg-beige-200/80 px-2 py-0.5 rounded-full">
+                            ${table.guests.length} / ${state.venue.maxPerTable} seats
+                        </span>
+                    </div>
+                    <div class="space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar">
+                        ${table.guests.length === 0 ? '<p class="text-[11px] text-beige-500 italic">Empty table</p>' : ''}
+                        ${table.guests.map(g => `
+                            <div class="flex items-center justify-between bg-white/80 p-1.5 rounded-lg border border-beige-200 text-xs">
+                                <span class="font-medium text-beige-900 truncate max-w-[55%]" title="${escapeHtml(g.name)}">${escapeHtml(g.name)}</span>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-[10px] text-beige-600">Move to:</span>
+                                    <select onchange="swapGuestTable('${g.id}', this.value)" class="bg-beige-50 border border-beige-300 rounded text-[11px] px-1 py-0.5 text-beige-800 focus:outline-none">
+                                        ${state.tables.map(t => `
+                                            <option value="${t.id}" ${t.id === table.id ? 'selected disabled' : ''}>
+                                                Table ${t.id} ${t.id === table.id ? '(Current)' : ''}
+                                            </option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCanvas() {
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+
+            // Clear Canvas
+            ctx.clearRect(0, 0, w, h);
+
+            // Warm beige luxury background grid pattern
+            ctx.fillStyle = '#faf6f0';
+            ctx.fillRect(0, 0, w, h);
+
+            // Fine luxury grid lines
+            ctx.strokeStyle = 'rgba(212, 184, 134, 0.15)';
+            ctx.lineWidth = 1;
+            const gridSize = 25;
+
+            for (let x = 0; x < w; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            for (let y = 0; y < h; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+
+            // Draw outer luxury room border
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(10, 10, w - 20, h - 20);
+
+            if (state.tables.length === 0) {
+                // Prompt text on empty canvas
+                ctx.fillStyle = '#8c6d46';
+                ctx.font = '14px Playfair Display, Georgia, serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Venue Floor Plan Ready', w / 2, h / 2 - 10);
+                ctx.font = '12px Inter, sans-serif';
+                ctx.fillStyle = '#a37c4d';
+                ctx.fillText('Click "Optimize Seating" to lay out guest tables dynamically', w / 2, h / 2 + 12);
+                return;
+            }
+
+            // Layout Tables in a elegant circular / grid arrangement inside canvas
+            const numTables = state.tables.length;
+            const cols = Math.ceil(Math.sqrt(numTables));
+            const rows = Math.ceil(numTables / cols);
+            const paddingX = w / (cols + 1);
+            const paddingY = h / (rows + 1);
+
+            state.tables.forEach((table, idx) => {
+                const colIdx = idx % cols;
+                const rowIdx = Math.floor(idx / cols);
+
+                const cx = paddingX * (colIdx + 1);
+                const cy = paddingY * (rowIdx + 1);
+                const tableRadius = 38;
+
+                // Table outer glow ring
+                ctx.beginPath();
+                ctx.arc(cx, cy, tableRadius + 6, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(212, 175, 55, 0.1)';
+                ctx.fill();
+
+                // Main Circular Luxury Table
+                ctx.beginPath();
+                ctx.arc(cx, cy, tableRadius, 0, Math.PI * 2);
+                ctx.fillStyle = '#efe5d5';
+                ctx.fill();
+                ctx.strokeStyle = '#b88958';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Table Title Text
+                ctx.fillStyle = '#2c1e13';
+                ctx.font = 'bold 12px Playfair Display, serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`T${table.id}`, cx, cy - 4);
+
+                ctx.font = '9px Inter, sans-serif';
+                ctx.fillStyle = '#7a512d';
+                ctx.fillText(`${table.guests.length} Ppl`, cx, cy + 10);
+
+                // Draw Guest Chairs / Dots around table
+                const maxSeats = state.venue.maxPerTable;
+                const chairDistance = tableRadius + 18;
+
+                for (let s = 0; s < maxSeats; s++) {
+                    const angle = (s * (2 * Math.PI / maxSeats)) - Math.PI / 2;
+                    const chairX = cx + chairDistance * Math.cos(angle);
+                    const chairY = cy + chairDistance * Math.sin(angle);
+
+                    const guest = table.guests[s];
+
+                    ctx.beginPath();
+                    ctx.arc(chairX, chairY, 8, 0, Math.PI * 2);
+
+                    if (guest) {
+                        // Seated guest dot
+                        ctx.fillStyle = '#d4af37'; // Gold
+                        ctx.fill();
+                        ctx.strokeStyle = '#523720';
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+
+                        // Guest name short label
+                        ctx.fillStyle = '#2c1e13';
+                        ctx.font = '9px Inter, sans-serif';
+                        const firstName = guest.name.split(' ')[0];
+                        ctx.fillText(firstName, chairX, chairY + (angle > 0 && angle < Math.PI ? 16 : -12));
+                    } else {
+                        // Empty chair
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fill();
+                        ctx.strokeStyle = '#cca378';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            });
+        }
+
+        function exportCSV() {
+            if (state.tables.length === 0) {
+                showToast('Please optimize seating before exporting CSV roster.', true);
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Table Number,Table Name,Guest Name,Guest Email\n";
+
+            state.tables.forEach(table => {
+                table.guests.forEach(guest => {
+                    csvContent += `"${table.id}","${table.name}","${guest.name}","${guest.email}"\n`;
+                });
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Venue_Seating_Roster_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast("CSV Roster downloaded successfully.");
+        }
+
+        function printPlaceCards() {
+            if (state.tables.length === 0 || state.guests.length === 0) {
+                showToast("No seated guests available to generate place cards.", true);
+                return;
+            }
+
+            const printArea = document.getElementById('print-area');
+            const placeCardsGrid = document.getElementById('place-cards-grid');
+            placeCardsGrid.innerHTML = '';
+
+            state.tables.forEach(table => {
+                table.guests.forEach(guest => {
+                    const card = document.createElement('div');
+                    card.className = "border-2 border-amber-800 p-6 rounded-lg text-center bg-amber-50 shadow-sm flex flex-col justify-center items-center h-40";
+                    card.innerHTML = `
+                        <p class="text-xs font-serif uppercase tracking-widest text-amber-900 mb-1">Welcome Guest</p>
+                        <h2 class="text-xl font-bold font-serif text-gray-900 mb-2">${escapeHtml(guest.name)}</h2>
+                        <div class="w-12 h-0.5 bg-amber-600 mb-2"></div>
+                        <p class="text-sm font-semibold text-amber-900">${table.name}</p>
+                    `;
+                    placeCardsGrid.appendChild(card);
+                });
+            });
+
+            printArea.classList.remove('hidden');
+            window.print();
+            printArea.classList.add('hidden');
+        }
+
+        function sendEmailNotifications() {
+            if (state.tables.length === 0) {
+                showToast("Please calculate seating plan before emailing guests.", true);
+                return;
+            }
+
+            const btn = document.getElementById('email-guests-btn');
+            const statusMsg = document.getElementById('status-message');
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Dispatching Emails...`;
+
+            let totalSent = 0;
+            let totalFailed = 0;
+            let allSeatedGuests = [];
+
+            state.tables.forEach(table => {
+                table.guests.forEach(guest => {
+                    allSeatedGuests.push({ ...guest, tableName: table.name });
+                });
+            });
+
+            if (allSeatedGuests.length === 0) {
+                showToast("No seated guests to send emails to.", true);
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane text-base text-champagne-gold"></i><span>Email Seat Details</span>`;
+                return;
+            }
+
+            // Dispatch EmailJS calls sequentially/batch
+            const promises = allSeatedGuests.map(guest => {
+           
+              const templateParams = {
+    to_name: guest.name,
+    to_email: guest.email,
+    table_number: guest.tableName, // <-- Updated to table_number to match {{table_number}}
+    event_name: "Exclusive Luxury Gala"
+};
+                return emailjs.send('service_ef62gtt', 'template_k1ymb7j', templateParams)
+                    .then(res => { totalSent++; })
+                    .catch(err => { totalFailed++; });
+            });
+
+            Promise.all(promises).then(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane text-base text-champagne-gold"></i><span>Email Seat Details</span>`;
+                
+                statusMsg.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-800', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+                if (totalSent > 0) {
+                    statusMsg.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+                    statusMsg.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Dispatched ${totalSent} seating confirmation emails successfully.`;
+                } else {
+                    statusMsg.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-800');
+                    statusMsg.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> EmailJS requests dispatched. Ensure EmailJS Service ID & Template are published.`;
+                }
+            });
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastText.textContent = message;
+            if (isError) {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-red-600";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-600";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function updateUI() {
+            renderGuestList();
+            renderRelationships();
+            renderSeatingInspector();
+            renderCanvas();
+            scoreValHeader.textContent = `${state.harmonyScore}%`;
+        }
+
+        // Initialize on Load
+        window.onload = function() {
+            setupCanvas();
+            updateUI();
+            triggerSolve(); // Initial default run
+        };
+    </script>
+</body>
+</html>
