@@ -5,6 +5,9 @@
 #include "arena.h"
 #include "optimizer.h"
 #include "parser.h"
+#include <libpq-fe.h> // PostgreSQL C client library
+
+#define CONNECTION_STRING "postgresql://neondb_owner:npg_abfZCqhU46zW@ep-broad-frog-b5g43d4p-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 #define ARENA_SIZE (1024 * 1024 * 16) // 16 MB pre-allocated arena memory
 
@@ -132,4 +135,44 @@ int main(void) {
     mg_mgr_free(&mgr);
     arena_free(&global_arena);
     return 0;
+}
+
+
+PGconn *init_db() {
+    PGconn *conn = PQconnectdb(CONNECTION_STRING);
+    if (PQstatus(conn) != CONNECTION_OK) {
+        fprintf(stderr, "Neon DB Connection Failed: %s\n", PQerrorMessage(conn));
+        PQfinish(conn);
+        exit(1);
+    }
+    printf("Successfully connected to Neon PostgreSQL Cloud DB!\n");
+    return conn;
+}
+
+// Example User Registration Handler endpoint function
+void handle_register(PGconn *conn, const char *username, const char *password) {
+    const char *paramValues[2] = { username, password };
+    PGresult *res = PQexecParams(conn,
+        "INSERT INTO users (username, password_hash) VALUES ($1, $2) ON CONFLICT (username) DO NOTHING;",
+        2, NULL, paramValues, NULL, NULL, 0);
+    
+    PQclear(res);
+}
+
+// Example Guest Insert matching to_name and to_email
+void handle_add_guest(PGconn *conn, int user_id, const char *to_name, const char *to_email, const char *table_number) {
+    const char *paramValues[4];
+    char user_id_str[20];
+    sprintf(user_id_str, "%d", user_id);
+
+    paramValues[0] = user_id_str;
+    paramValues[1] = to_name;
+    paramValues[2] = to_email;
+    paramValues[3] = table_number;
+
+    PGresult *res = PQexecParams(conn,
+        "INSERT INTO guests (user_id, to_name, to_email, table_number) VALUES ($1, $2, $3, $4);",
+        4, NULL, paramValues, NULL, NULL, 0);
+    
+    PQclear(res);
 }

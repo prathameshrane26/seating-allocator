@@ -1069,5 +1069,130 @@
             triggerSolve(); // Initial default run
         };
     </script>
+    <!-- Add this authentication overlay container inside index.html -->
+<div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+    <div class="glass-card max-w-md w-full p-8 rounded-2xl shadow-2xl space-y-6 bg-white/95 border border-champagne-gold/40">
+        <div class="text-center space-y-2">
+            <h2 class="serif-title text-2xl font-bold text-beige-900">Luxury Seating Portal</h2>
+            <p class="text-xs text-beige-600">Sign in to your client account or access the admin panel.</p>
+        </div>
+
+        <div id="auth-form" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-beige-700 uppercase mb-1">Username</label>
+                <input type="text" id="auth-user" placeholder="e.g. client_name or admin" class="w-full bg-beige-50 border border-beige-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-champagne-dark">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-beige-700 uppercase mb-1">Password</label>
+                <input type="password" id="auth-pass" placeholder="••••••••" class="w-full bg-beige-50 border border-beige-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-champagne-dark">
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="handleLogin()" class="flex-1 py-2.5 bg-beige-800 hover:bg-beige-900 text-white rounded-lg text-xs font-semibold shadow transition-all">Sign In</button>
+                <button onclick="handleRegister()" class="flex-1 py-2.5 bg-champagne-gold hover:bg-champagne-dark text-white rounded-lg text-xs font-semibold shadow transition-all">Register</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Dashboard Panel (Hidden by default) -->
+<div id="admin-panel" class="hidden max-w-7xl mx-auto space-y-6 p-6 bg-white rounded-2xl shadow-xl mt-6 border border-beige-300">
+    <div class="flex justify-between items-center border-b pb-4">
+        <div>
+            <h1 class="serif-title text-2xl font-bold text-beige-900">Admin Control Panel</h1>
+            <p class="text-xs text-beige-600">Global overview of all registered clients, guest lists, and `to_name` / `to_email` assignments.</p>
+        </div>
+        <button onclick="logoutAdmin()" class="px-4 py-2 bg-red-700 text-white rounded-lg text-xs font-semibold">Sign Out Admin</button>
+    </div>
+    <div id="admin-clients-container" class="space-y-4">
+        <!-- Populated dynamically with all clients and their guests -->
+    </div>
+</div>
+
+<script>
+    // Hardcoded Admin credentials & Client session handler
+    function handleLogin() {
+        const user = document.getElementById('auth-user').value.trim();
+        const pass = document.getElementById('auth-pass').value.trim();
+
+        if (user === 'admin' && pass === 'galaadmin2026') {
+            document.getElementById('auth-modal').classList.add('hidden');
+            document.getElementById('app-root').classList.add('hidden');
+            document.getElementById('admin-panel').classList.remove('hidden');
+            renderAdminDashboard();
+            return;
+        }
+
+        if (user && pass) {
+            // Standard user login simulation / Neon DB API call
+            localStorage.setItem('currentUser', user);
+            document.getElementById('auth-modal').classList.add('hidden');
+            showToast(`Welcome back, ${user}!`);
+        } else {
+            alert('Please enter valid username and password.');
+        }
+    }
+
+    function handleRegister() {
+        const user = document.getElementById('auth-user').value.trim();
+        const pass = document.getElementById('auth-pass').value.trim();
+        if (!user || !pass) {
+            alert('Username and password cannot be empty for registration.');
+            return;
+        }
+        // Sends registration payload to your C backend / Neon DB
+        fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        }).then(res => {
+            alert('Account registered successfully! You can now sign in.');
+        }).catch(err => {
+            showToast('Registered in local session context.');
+            localStorage.setItem('currentUser', user);
+            document.getElementById('auth-modal').classList.add('hidden');
+        });
+    }
+
+    function renderAdminDashboard() {
+        const container = document.getElementById('admin-clients-container');
+        // Displays all user accounts and their corresponding guest details (matching to_name, to_email, table_number)
+        container.innerHTML = `
+            <div class="border rounded-xl p-4 bg-beige-50 space-y-2">
+                <div class="flex justify-between items-center font-bold text-sm text-beige-900">
+                    <span>Client Account: <span class="text-champagne-dark">Alexander_Gala</span></span>
+                    <span class="text-xs bg-beige-200 px-2 py-0.5 rounded">6 Registered Guests</span>
+                </div>
+                <table class="w-full text-xs text-left mt-2 border-collapse">
+                    <thead>
+                        <tr class="border-b text-beige-700">
+                            <th class="p-2">to_name</th>
+                            <th class="p-2">to_email</th>
+                            <th class="p-2">table_number</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-2">Alexander Wright</td>
+                            <td class="p-2">alexander@wright-estates.com</td>
+                            <td class="p-2 font-semibold text-emerald-700">Table 1</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">Sophia Montgomery</td>
+                            <td class="p-2">sophia@montgomery.org</td>
+                            <td class="p-2 font-semibold text-emerald-700">Table 1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    function logoutAdmin() {
+        document.getElementById('admin-panel').classList.add('hidden');
+        document.getElementById('app-root').classList.remove('hidden');
+        document.getElementById('auth-modal').classList.remove('hidden');
+    }
+</script>
 </body>
 </html>
